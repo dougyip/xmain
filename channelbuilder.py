@@ -9,14 +9,16 @@ import factory
 import constants
 
 class DelayComponent(metaclass=ABCMeta):
-    @abstractmethod
-    def set_delay(self, val):
-        pass
 
     @abstractmethod
     def initialize(self):
         pass
-    
+
+    @abstractmethod
+    def set_delay(self, val):
+        pass
+
+
 @dataclass
 class Trombone(DelayComponent):
     size: int
@@ -28,6 +30,12 @@ class Trombone(DelayComponent):
 
     def set_delay(self, val):
         print(f"Trombone at address {self.address} is now set to {val:,}")
+
+    def send_results(self, error_code):
+        if self.error_code == 0:
+            print(f"Trombone at {self.address} sucessfully set delay")
+        else:
+            print(f"Trombone at {self.address} failed to set delay")
 
 @dataclass
 class Relay(DelayComponent):
@@ -42,6 +50,13 @@ class Relay(DelayComponent):
 
     def set_delay(self, val):
         print(f"Relay delay is now {val:,}")
+
+    def send_results(self, error_code):
+        if self.error_code == 0:
+            print(f"Relay sucessfully set delay")
+        else:
+            print(f"Relay failed to set delay")
+
 
     def list_sections(self):
         print(f"Relay section map {self.sections}")
@@ -69,20 +84,23 @@ class Channel(DelayComponent):
             self.components[self._trombone_index].initialize()
 
     def set_delay(self, val):
-
+        self.delay = val
         if val < self.size:
             #If val > maximum range of binary relay sections, subtract the size of the top_up section from the 'val' and activate that i2c address.
             if self._relay_index is not None and val > self.components[self._relay_index].size:
                 #turn on top_up section
                 val = val - self.components[self._relay_index].top_up[0]
                 print(f"Relay on channel {self.channel_number} has top_up turned on")
+            if self._trombone_index is not None:
+                tval = val % self.components[self._trombone_index].size
+                self.components[self._trombone_index].set_delay(tval)
+                val = val - tval
             if self._relay_index is not None:
                 self.components[self._relay_index].set_delay(val)
-            if self._trombone_index is not None:
-                self.components[self._trombone_index].set_delay(val % 625000)
+
 
             #TODO Need "success" responses from all the channel component set_delay() methods before updating the self.delay with val.
-            self.delay = val
+
 
             print(f"Channel delay is now {self.delay:,}")
 
