@@ -2,16 +2,8 @@
 import enum
 from motor import *
 from dataclasses import dataclass
+import constants
 
-# SystemController CLASS
-ERR_NO_ERROR = -1
-ERR_INVALID_ARG = 1
-ERR_NO_CALIBRATION = 2
-ERR_DELAY_NOT_SET = 3
-ERR_DELAY_OUT_OF_RANGE = 4
-
-COM_PORT_5 = "/dev/ttyAMA0"
-COM_PORT_3 = "/dev/ttyAMA1"
 
 @dataclass
 class Trombone:
@@ -48,15 +40,10 @@ class Trombone:
 
 
         # READ THE CALIBRATION TABLE FILE
-        
-
-
-
         self.CalibrationTable_PRI = [0,0]
         self.CalibrationTable_SEC = [0,0]
         
         # read the calibration table file for 5120 entries for Primary Trombone
-        # read the calibration table file for 5120 entries for Secondary Trombone
         
         
      
@@ -81,7 +68,7 @@ class Trombone:
         # determine if ser or parallel mode
         # set the delay in the trombone only portion
         print (f"Set delay Trombone XT-100 {Value}")
-        return ERR_NO_ERROR
+        return constants.ERR_NO_ERROR
 
     def set_delay(self, pri_sec:enum, value : int, overshoot: bool, caltable: bool, callback: object  ) -> None:
         if (pri_sec == 'PRI'):
@@ -95,11 +82,11 @@ class Trombone:
     
     def set_Delay_Primary(self,Value):
         print (f"Set delay CH1 XT-200 {Value}")
-        return ERR_NO_ERROR
+        return constants.ERR_NO_ERROR
 
     def set_Delay_Secondary(self,Value):
         print (f"Set delay CH2 XT-200 {Value}")
-        return ERR_NO_ERROR
+        return constants.ERR_NO_ERROR
     
     def test_input_command(self):
         getinput = input()
@@ -107,10 +94,6 @@ class Trombone:
         t.Motor.send_cmd(t.Motor.com1,motorcommand,0.100)
         result = t.Motor.read_response(t.Motor.com1)
         print (motorcommand, result)
-
-
-        
-
     
 
 if __name__ == "__main__":
@@ -120,8 +103,7 @@ if __name__ == "__main__":
     
     t = Trombone()
 
-    t.initialize(COM_PORT_5)    # TTY/AMA0
-
+    t.initialize(constants.COM_PORT_5)    # TTY/AMA0
 
     while True:
         t.test_input_command()
