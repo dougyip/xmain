@@ -56,7 +56,9 @@ class Relay(DelayComponent):
         if val > self._range:
             print(f"   Relay has top_up of {self.top_up[0]:,} turned on")
             val = val - self.top_up[0]
-        print(f"   Relay delay is now {val:,}")
+
+        
+        print(f"   Relay binary sections are now set to {val:,}")
 
     def send_results(self, error_code):
         if self.error_code == 0:
@@ -92,7 +94,7 @@ class Channel(DelayComponent):
 
         if val < self.size:
             t_val = 0
-            # If this channel has both a relay and trombone
+            # Determine delay value for Trombone if this channel has one
             if self._trombone_index is not None:
                 if self.components[self._relay_index] is not None and val > self.components[self._relay_index]._range:
                     t_val = (val - self.components[self._relay_index].top_up[0]) % self.components[self._trombone_index].size           
@@ -100,6 +102,7 @@ class Channel(DelayComponent):
                     t_val = val % self.components[self._trombone_index].size
 
                 self.components[self._trombone_index].set_delay(t_val)
+                # Determine delay value for Relay (subtract Trombone delay if applicable)
                 val = val - t_val
             
             self.components[self._relay_index].set_delay(val)
