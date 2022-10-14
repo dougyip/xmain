@@ -99,19 +99,6 @@ class Motor:
         # perform a self calibration on the trombone
         return
 
-    def move_left(self):
-        return
-
-    def move_right(self):
-        return
-
-    def set_zeroposition(self):
-        return
-
-    def set_di(self):
-        return
-
-
     # these MOTOR commands return a VALUE
     def get_motor_SC(self) -> int:
         _result = self.get_command("SC") # GET STATUS CODE
@@ -134,7 +121,6 @@ class Motor:
         return int(_result,base=10)  # RETURNS INT VALUE
 
     # these MOTOR commands return an 0% ACKNOWLEDGEMENT
-
     def set_motor_AR(self) -> str:
         _response = self.set_command("AR") # SET ALARM RESET
         return _response
