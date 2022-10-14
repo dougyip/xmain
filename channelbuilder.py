@@ -24,7 +24,7 @@ class Trombone(DelayComponent):
     __str__ = "TROMBONE"
 
     def initialize(self):
-        print(f"Initializiing Trombone at address {self.address}")
+        print(f"   Initializiing Trombone at address {self.address}")
 
     def set_delay(self, val):
         #print(f"Trombone at address {self.address} is now set to {val:,}")
@@ -32,9 +32,9 @@ class Trombone(DelayComponent):
 
     def send_results(self, error_code):
         if error_code == 0:
-            print(f"Trombone at {self.address} sucessfully set delay")
+            print(f"   Trombone at {self.address} sucessfully set delay")
         else:
-            print(f"Trombone at {self.address} failed to set delay")
+            print(f"   Trombone at {self.address} failed to set delay")
 
 @dataclass
 class Relay(DelayComponent):
@@ -47,22 +47,22 @@ class Relay(DelayComponent):
     def initialize(self):            
         self._range = 2 * self.sections[-1][0]
         self._step = self.sections[0][0]
-        print(f"Initializiing Relay:")       
+        print(f"   Initializiing Relay:")       
         print(f"   Relay has step of {self._step}")
         print(f"   Relay has range of {self._range}")
         print(f"   Relay has top_up {self.top_up}")
 
     def set_delay(self, val):
         if val > self._range:
-            print(f"Relay has top_up of {self.top_up[0]:,} turned on")
+            print(f"   Relay has top_up of {self.top_up[0]:,} turned on")
             val = val - self.top_up[0]
-        print(f"Relay delay is now {val:,}")
+        print(f"   Relay delay is now {val:,}")
 
     def send_results(self, error_code):
         if self.error_code == 0:
-            print(f"Relay sucessfully set delay")
+            print(f"   Relay sucessfully set delay")
         else:
-            print(f"Relay failed to set delay")
+            print(f"   Relay failed to set delay")
 
 
 @dataclass
