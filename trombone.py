@@ -40,9 +40,7 @@ class Trombone:
 
 
         # READ THE CALIBRATION TABLE FILE
-        self.CalibrationTable_PRI = [0,0]
-        self.CalibrationTable_SEC = [0,0]
-        
+        self.CalibrationTable = [0,0]
         # read the calibration table file for 5120 entries for Primary Trombone
         
         
@@ -54,29 +52,57 @@ class Trombone:
         return 
 
 
-    def set_CalibrationTable(self,Index,Value):
+    def set_CalibrationTable(self,Index:int, Value:int):
         self.CalibrationTable[Index] = Value
 
-    def get_CalibrationTable(self,Index):
+    def get_CalibrationTable(self,Index:int):
         return self.CalibrationTable[Index]
 
     def read_CalibrationTable_from_file(self):
         # fill the CalibrationTable with values from stored file or from NV_ file ? 
-        pass
+        
+        try:
+            with open('ctstore0.txt','r') as file:
+                for eachline in  file.readlines():
+                    self.CalibrationTable.append(int((eachline).replace('\r','')))             
+        except FileNotFoundError:
+            # The file was not found so create it
+            
+            pass            
+    def write_CalibrationTable_to_file(self):
+        # fill the CalibrationTable with values from stored file or from NV_ file ? 
+        
+        try:
+            with open('ctstore0.txt','w') as file:
+                for index in range(0,5120):
+                    file.writeline('0')
+                file.close    
+        except FileNotFoundError:
+            # The file was not found so create it
+            
+            pass            
 
-    def set_Delay(self,Value):
+
+    def set_Delay(self,Value:int):
         # determine if ser or parallel mode
         # set the delay in the trombone only portion
         print (f"Set delay Trombone XT-100 {Value}")
+        
+        
+        
+        
+        
+        
+        
         return constants.ERR_NO_ERROR
 
-    def set_delay(self, pri_sec:enum, value : int, overshoot: bool, caltable: bool, callback: object  ) -> None:
-        if (pri_sec == 'PRI'):
-            # determine which COM port to use whether XT-100 or XT-200 PRIMARY
-            pass
-        else:
-            # use the com port for secondary trombone XT-200 SECONDARY
-            pass
+    def set_delay(value : int, overshoot: bool, caltable: bool, callback: object  ) -> str:
+        # python
+        # set the delay to value in fs
+        print(f"setting delay to {value}")     
+        
+        
+        
 
                     
     
@@ -101,9 +127,14 @@ if __name__ == "__main__":
     import time
     print ("Main program ")
     
-    t = Trombone()
+    t = Trombone(constants.COM_PORT_5)
 
-    t.initialize(constants.COM_PORT_5)    # TTY/AMA0
+    # t.initialize()    # TTY/AMA0
+
+    t.write_CalibrationTable_to_file
+    t.read_CalibrationTable_from_file()
+
+
 
     while True:
         t.test_input_command()
