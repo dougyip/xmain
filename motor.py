@@ -47,7 +47,7 @@ class Motor:
 
 
 
-    def __init__(self,com_port_to_use):
+    def __init__(self, com_port_to_use:object):
 
         """
         Instantiate with the Pi.
@@ -506,7 +506,7 @@ class Motor:
             if (_response != constants.ACK_RESPONSE_BUF):
                 print(f"MR FAIL TO ACK. {_response}")
         else:
-            _DeltaSteps = _DeltaSteps * -1;
+            _DeltaSteps = _DeltaSteps * -1
             # going from lower step number (LESS delay) to higher step number (MORE delay)
             # after sending command, WAIT for the acknowledgement before returning
             # MOTOR_Command(ML, _DeltaSteps, WAIT); // ML = move left with MOTOR ON RIGHT SIDE
@@ -597,7 +597,7 @@ if __name__ == "__main__":
     m = Motor(com_port)
     m.initialize()
 
-
+    
     while True:
         m.test_input_command()
         m.test_input_command()

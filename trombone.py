@@ -123,48 +123,42 @@ class Trombone:
             if (caltable == True):
                 # move to overshoot position with caltable
                 final_delay_pos_digital_steps = int((((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + constants.MOTOR_STEPS_PER_FIVE_PS)
-                if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
-                    final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
-                elif (final_delay_pos_digital_steps < 0):
-                    final_delay_pos_digital_steps = 0
-                self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
-                # now set the current motor position to reflect the actual delay setting
-                # TBD
             else:
                 # move to the overshoot position without caltable
                 final_delay_pos_digital_steps = int(((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + constants.MOTOR_STEPS_PER_FIVE_PS)
-                if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
-                    final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
-                elif (final_delay_pos_digital_steps < 0):
-                    final_delay_pos_digital_steps = 0
-                self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
-                # now set the current motor position to reflect the actual delay setting
-                # TBD
+
+            if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
+                final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+            elif (final_delay_pos_digital_steps < 0):
+                final_delay_pos_digital_steps = 0
+            
+            print(f"digital step pos = {final_delay_pos_digital_steps}")
+            
+            self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+            # now set the current motor position to reflect the actual delay setting
+            # TBD
            
         # move to final position
         if (caltable == True):
             # move to final position with caltable
             final_delay_pos_digital_steps = int(((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
-            if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
-                final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
-            elif (final_delay_pos_digital_steps < 0):
-                final_delay_pos_digital_steps = 0
-            self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
-            # now set the current motor position to reflect the actual delay setting
-            # TBD
         else:
             # move to final position without caltable
             final_delay_pos_digital_steps = int((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
-            if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
-                final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
-            elif (final_delay_pos_digital_steps < 0):
-                final_delay_pos_digital_steps = 0
-            self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
-            # now set the current motor position to reflect the actual delay setting
-            # TBD
+
+        if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
+            final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+        elif (final_delay_pos_digital_steps < 0):
+            final_delay_pos_digital_steps = 0
+
+        print(f"digital step pos = {final_delay_pos_digital_steps}")
+
+        self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+        # now set the current motor position to reflect the actual delay setting
+        # TBD
                                
         
-            """
+        """
             if ((((_DelaySetting_FS >= 0) && (_DelaySetting_FS < 625000))) ||
             ((_DelaySetting_FS == 625000) && (((strcmp(INSTRUMENT.deviceOPTION, "000") == 0) ||
                                                (strcmp(INSTRUMENT.deviceOPTION, "OEM") == 0) ||
@@ -310,6 +304,8 @@ if __name__ == "__main__":
 
     #t.write_cal_table()
     t.read_cal_table()
+    
+    t.set_delay(600000,True,True,None)
 
     while True:
         t.test_input_command()
