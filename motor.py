@@ -88,6 +88,8 @@ class Motor:
         
         self.com_port = com_port_to_use
         
+        self.MOTOR_CurrentStepPosition = 0
+        
         #
         #
         # define using the same API as in original library
@@ -481,7 +483,7 @@ class Motor:
         
         return
 
-    def set_DelayDigital(self,_NewDelaySettingDigital_L):
+    def set_delay_digital(self, _NewDelaySettingDigital_L:int):
         # SET THE NEW DIGITAL DELAY POSITION
 
         # NOTE: MOTOR IS POSITIONED ON THE LEFT HAND SIDE.  TROMBONE MOVES FROM LEFT TO RIGHT.
@@ -492,25 +494,25 @@ class Motor:
 
         # MOVE TO THE NEW DIGITAL STEP POSITION
         if (_NewDelaySettingDigital_L >= 0):
-            _DeltaSteps = MOTOR_CurrentStepPosition - (_NewDelaySettingDigital_L)
-            MOTOR_CurrentStepPosition = _NewDelaySettingDigital_L
+            _delta_steps = self.MOTOR_CurrentStepPosition - (_NewDelaySettingDigital_L)
+            self.MOTOR_CurrentStepPosition = _NewDelaySettingDigital_L
         else:
             # NEW DELAY SETTING IS NEGATIVE ... NOT POSSIBLE
             return False
 
-        if (_DeltaSteps > 0):
+        if (_delta_steps > 0):
             # going from higher step number (MORE Delay) to lower step number (LESS Delay)
             # after sending command, WAIT for the acknowledgement before returning
-            # MOTOR_Command(MR, _DeltaSteps, WAIT); // MR = move right with MOTOR ON RIGHT SIDE
-            _response = self.set_motor_MR(self,_DeltaSteps)
+            # MOTOR_Command(MR, _delta_steps, WAIT); // MR = move right with MOTOR ON RIGHT SIDE
+            _response = self.set_motor_MR(self,_delta_steps)
             if (_response != constants.ACK_RESPONSE_BUF):
                 print(f"MR FAIL TO ACK. {_response}")
-        else:
-            _DeltaSteps = _DeltaSteps * -1
+        else:  
+            _delta_steps = _delta_steps * -1
             # going from lower step number (LESS delay) to higher step number (MORE delay)
             # after sending command, WAIT for the acknowledgement before returning
-            # MOTOR_Command(ML, _DeltaSteps, WAIT); // ML = move left with MOTOR ON RIGHT SIDE
-            _response = self.set_motor_ML(self,_DeltaSteps)
+            # MOTOR_Command(ML, _delta_steps, WAIT); // ML = move left with MOTOR ON RIGHT SIDE
+            _response = self.set_motor_ML(_delta_steps)
             if (_response != constants.ACK_RESPONSE_BUF):
                 print(f"ML FAIL TO ACK. {_response}")
 
@@ -529,7 +531,7 @@ class Motor:
     def verify_and_round(self,delay):
         return
     
-    def set_command(self,motor_command) -> str:
+    def set_command(self, motor_command:str) -> str:
         # Send motor_command to the motor
         # Get the response from the motor 
         # could be 0% or XX=VALUE
@@ -538,7 +540,7 @@ class Motor:
         print (f"Sent: {motor_command} Response: {response}")
         return response # return a str should be constants.ACK_RESPONSE_IMM "0%\r" ACK_RESPONSE_BUF "0*\r"
 
-    def get_command(self,motor_command) -> str:
+    def get_command(self,motor_command : str) -> str:
         # Send motor_command to the motor
         # Get the response from the motor 
         # could be 0% or XX=VALUE
@@ -550,7 +552,7 @@ class Motor:
         return digits 
 
 
-    def _process_response(self,_MotorResponseCommandLine:str) -> str:
+    def _process_response(self, _MotorResponseCommandLine:str) -> str:
         # RESPONSE FROM MOTOR IS XX=VALUE
         # PARSE THE TWO LETTER COMMAND AND THE INTEGER VALUE
         # NEED TO PARSE THIS RESPONSE
@@ -559,7 +561,7 @@ class Motor:
         digits = digits_only[1]
         return digits   # returns a string of chars
 
-    def send_cmd(self,serialport,motorcommand,waittime):
+    def send_cmd(self, serialport : object, motorcommand: str, waittime:float):
         command = "0" + motorcommand + '\r'
         serialport.write(command.encode())    # encode into bytes
         time.sleep(waittime) # send to motor and wait 100 ms to read response

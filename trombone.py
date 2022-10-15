@@ -134,7 +134,7 @@ class Trombone:
             
             print(f"digital step pos = {final_delay_pos_digital_steps}")
             
-            self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+            self.Motor.set_delay_digital(final_delay_pos_digital_steps)
             # now set the current motor position to reflect the actual delay setting
             # TBD
            
@@ -153,7 +153,7 @@ class Trombone:
 
         print(f"digital step pos = {final_delay_pos_digital_steps}")
 
-        self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+        self.Motor.set_delay_digital(final_delay_pos_digital_steps)
         # now set the current motor position to reflect the actual delay setting
         # TBD
                                
