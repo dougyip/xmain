@@ -112,7 +112,6 @@ class Trombone:
 
         # 625000 
         _final_delay_setting = value
-        _delay_setting_with_ovs = value + 5000
         _caltable_index = int((_final_delay_setting * 2)/1000)  # index into the caltable to get the offset amount
         _caltable_offset = self.CalibrationTable[_caltable_index]
         
