@@ -96,13 +96,13 @@ class Trombone:
         return constants.ERR_NO_ERROR
 
 
-    def set_Delay(self,Value:int):
+    def set_Delay(self, value:int):
         # determine if ser or parallel mode
         # set the delay in the trombone only portion
-        print (f"Set delay Trombone XT-100 {Value}")
+        print (f"Set delay Trombone XT-100 {value}")
         return constants.ERR_NO_ERROR
 
-    def set_delay(value : int, overshoot: bool, caltable: bool, callback: object  ) -> str:
+    def set_delay(self, value : int, overshoot: bool, caltable: bool, callback: object  ) -> str:
         # 
         # set the delay to value in fs, value is >=0 and value <= 625000 fs
         print(f"setting delay to {value}") 
@@ -110,41 +110,59 @@ class Trombone:
         # delay value must be >=0 and <= 625.0
         # if overshoot is true move to overshoot position then move to final desired position
 
+        # 625000 
         _final_delay_setting = value
         _delay_setting_with_ovs = value + 5000
         _caltable_index = int((_final_delay_setting * 2)/1000)  # index into the caltable to get the offset amount
+        _caltable_offset = self.CalibrationTable[_caltable_index]
+        
         #// NOTE: THE CALIBRATION TABLE ENTRY OFFSET IS IN FEMTOSECONDS UNITS, E.G. TABLE ENTRY OF -600 SHOULD BE == -0.60 ps
  
                 
         if (overshoot == True):
-            # move to overshoot position
-            final_delay_pos_digital = 
-            _TEMP_f = ((_FinalCP_DelaySetting_PS - _CalTableEntryOffsetAmount) * MOTOR_STEPS_PER_ONE_PS) + MOTOR_STEPS_PER_FIVE_PS;
-                    _MotorPositionDIGITAL = (long)_TEMP_f;
-
-                    if (_MotorPositionDIGITAL > MAX_NUMBER_MOTOR_STEPS) // Final Calibrated Position + 8325 STEPS is beyond limit, then adjust amount
-                    {
-                        _MotorPositionDIGITAL = MAX_NUMBER_MOTOR_STEPS;
-                    }
-                    // 07.21.21 IF CALC POSITION IS NEG, MAKE IT ZERO
-                    if (_MotorPositionDIGITAL < 0)
-                        _MotorPositionDIGITAL = 0;
-                    MOTOR_SetDelayDigital(_MotorPositionDIGITAL);
-                    MOTOR.CurrentDelaySettingPS = _DelaySetting_PS + (MOTOR_STEPS_PER_FIVE_PS / MOTOR_STEPS_PER_ONE_PS); // use a min of fix to reflect DESIRED delay setting
-                                                                                                                         // printf("OVERSHOOT _MotorPositionDIGITAL, Fcp, Fcp offset = %lu, %6.2f, %6.2f \n", _MotorPositionDIGITAL, _FinalCP_DelaySetting_PS, _CalTableEntryOffsetAmount);
-
-            
-            
-            pass
-            
+            if (caltable == True):
+                # move to overshoot position with caltable
+                final_delay_pos_digital_steps = int((((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + constants.MOTOR_STEPS_PER_FIVE_PS)
+                if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
+                    final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+                elif (final_delay_pos_digital_steps < 0):
+                    final_delay_pos_digital_steps = 0
+                self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+                # now set the current motor position to reflect the actual delay setting
+                # TBD
+            else:
+                # move to the overshoot position without caltable
+                final_delay_pos_digital_steps = int(((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + constants.MOTOR_STEPS_PER_FIVE_PS)
+                if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
+                    final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+                elif (final_delay_pos_digital_steps < 0):
+                    final_delay_pos_digital_steps = 0
+                self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+                # now set the current motor position to reflect the actual delay setting
+                # TBD
+           
         # move to final position
         if (caltable == True):
-            # use caltable to compute final position
-            pass
+            # move to final position with caltable
+            final_delay_pos_digital_steps = int(((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
+            if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
+                final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+            elif (final_delay_pos_digital_steps < 0):
+                final_delay_pos_digital_steps = 0
+            self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+            # now set the current motor position to reflect the actual delay setting
+            # TBD
         else:
-            # compute final position without caltable use
-            pass
-                                
+            # move to final position without caltable
+            final_delay_pos_digital_steps = int((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
+            if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
+                final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+            elif (final_delay_pos_digital_steps < 0):
+                final_delay_pos_digital_steps = 0
+            self.Motor.set_DelayDigital(final_delay_pos_digital_steps)
+            # now set the current motor position to reflect the actual delay setting
+            # TBD
+                               
         
             """
             if ((((_DelaySetting_FS >= 0) && (_DelaySetting_FS < 625000))) ||
@@ -270,18 +288,6 @@ class Trombone:
                 MOTOR.CurrentDelaySettingPS = _DelaySetting_PS;       // fix to reflect DESIRED delay setting
                 INSTRUMENT_SETTINGS.CURRENT_DELAY = _DelaySetting_PS; // 02.07.08
             }
-
-            if (INSTRUMENT.stateDEVICE_MODE == DEVICE_SERIAL)
-            {
-                HWIO_REL_SetRelays_X_SER(0x0000); // TURN OFF ALL THE RELAYS
-                for (_j = 1; _j <= HW_RELAYS.NUM_OF_SECTIONS; _j++)
-                {
-                    HW_RELAYS.RELAY_ON_OFF[_j] = OFF;
-                } // end-for
-            }     // end-if
-
-        } // bad 06-16-21}		  // end-if
-
         """    
         return True
    
