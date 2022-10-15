@@ -41,7 +41,7 @@ class Trombone:
 
         # READ THE CALIBRATION TABLE FILE
         self.CalibrationTable = []
-        # read the calibration table file for 5121 entries for Primary Trombone
+        # read the calibration table file for 5121 entries for Trombone
         if (self.read_cal_table == False):
             return False
         
@@ -51,14 +51,13 @@ class Trombone:
         # Read the calibration table into memory
         return 
 
+    def set_CalibrationTable(self, index:int, value:int):
+        self.CalibrationTable[index] = value
 
-    def set_CalibrationTable(self,Index:int, Value:int):
-        self.CalibrationTable[Index] = Value
+    def get_CalibrationTable(self, index:int):
+        return self.CalibrationTable[index]
 
-    def get_CalibrationTable(self,Index:int):
-        return self.CalibrationTable[Index]
-
-    def read_cal_table(self):
+    def read_cal_table(self) -> bool:
         # fill the CalibrationTable with values from stored file or from NV_ file ? 
         filename = "ctstore" + self.com_port_name[-1] + ".txt"
         try:
@@ -71,6 +70,11 @@ class Trombone:
             self.write_default_new_cal_table()
             self.read_cal_table()
             print(f"Cal Table # of items {len(self.CalibrationTable)}")
+            if (len(self.CalibrationTable) == 5121):
+                return True
+            else:
+                return False    # PROBLEM WITH CREATING CAL TABLE FILE
+        return True
                     
     def write_default_new_cal_table(self):
         # filename of cal_table is based on the last char of the com_port_name to indicate different and unique trombones
@@ -95,7 +99,6 @@ class Trombone:
             file.close
         return constants.ERR_NO_ERROR
 
-
     def set_Delay(self, value:int):
         # determine if ser or parallel mode
         # set the delay in the trombone only portion
@@ -103,21 +106,18 @@ class Trombone:
         return constants.ERR_NO_ERROR
 
     def set_delay(self, value : int, overshoot: bool, caltable: bool, callback: object  ) -> str:
-        # 
-        # set the delay to value in fs, value is >=0 and value <= 625000 fs
-        print(f"setting delay to {value}") 
+        # THIS METHOD IS CALLED FROM THE DELAY OR SYSTEM CONTROLLER
+        # value RANGE IS ALREADY CHECKED AND IS 0 >= value <= 625000 in units of fs
+        print(f"set delay called with {value}") 
         
-        # delay value must be >=0 and <= 625.0
         # if overshoot is true move to overshoot position then move to final desired position
 
-        # 625000 
         _final_delay_setting = value
         _caltable_index = int((_final_delay_setting * 2)/1000)  # index into the caltable to get the offset amount
         _caltable_offset = self.CalibrationTable[_caltable_index]
         
-        #// NOTE: THE CALIBRATION TABLE ENTRY OFFSET IS IN FEMTOSECONDS UNITS, E.G. TABLE ENTRY OF -600 SHOULD BE == -0.60 ps
- 
-                
+        # NOTE: THE CALIBRATION TABLE ENTRY OFFSET IS IN FEMTOSECONDS UNITS, E.G. TABLE ENTRY OF -600 SHOULD BE == -0.60 ps
+             
         if (overshoot == True):
             if (caltable == True):
                 # move to overshoot position with caltable
