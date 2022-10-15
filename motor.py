@@ -186,16 +186,12 @@ class Motor:
     
     def _set_move_distance_FS(self) -> bool:
         # SET THE MOVE DISTANCE TO STOP FOR FS MOVEMENT
+        # FS MOVEMENT IS MOVEMENT TOWARDS OPTO BARRIER AND STOPS WHEN INT SIGNAL IS GENERATED
         _response = self.set_motor_DI(constants.DI_STOP_DISTANCE_AFTER_SENSOR)
         if (_response != constants.ACK_RESPONSE_BUF):
             print(f"MOTOR DISTANCE SET FAIL TO ACK. {_response}")
             return False
         return True
-
-        
-
-        
-
         
     # POWER ON - INITIALIZATION
     # 
@@ -218,17 +214,9 @@ class Motor:
             # DO WE PRINT OR NOTIFY SOMEHOW THERE IS AN ALARM CODE IN MOTOR?
 
             # RESET THE ALARM
-            #_response = self.set_motor_AR()
-            #if (_response != constants.constants.ACK_RESPONSE_IMM):
-            #    print(f"CANNOT RESET MOTOR ALARM {_response}")
-                
             self._alarm_reset()
                 
             # MUST ENABLE THE MOTOR AFTER AN ALARM RESET
-            #_response = self.set_motor_ME()
-            #if (_response != constants.constants.ACK_RESPONSE_IMM):
-            #    print(f"CANNOT ENABLE MOTOR {_response}")
-                
             self._motor_enable()
             
             # CHECK THE STATUS AFTER RESETING THE ALARM
@@ -243,9 +231,6 @@ class Motor:
         # ALARM STILL PRESENT?
         if (_result != 0x00):
             # RESET THE ALARM
-            #_response = self.set_motor_AR()
-            #if (_response != constants.constants.constants.ACK_RESPONSE_IMM):
-            #    print(f"CANNOT RESET MOTOR ALARM {_response}")
             self._alarm_reset()
 
             _result = self.get_motor_AL()
@@ -264,10 +249,6 @@ class Motor:
             # CURRENT LOCATION IS INSIDE THE BARRIER SINCE THE OPTO BIT IS ON
             
             # MOVE BACK 100000 STEPS
-            #_response = self.set_command("FL-100000")
-            #if (_response != constants.ACK_RESPONSE_IMM):
-            #    print(f"CANNOT MOVE MOTOR FL-100000.")
-                
             self._move_back_100k_steps()
 
             time.sleep(1.0) # TIME TO MOVE BACK 100000 STEPS
