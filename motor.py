@@ -504,8 +504,8 @@ class Motor:
             # going from higher step number (MORE Delay) to lower step number (LESS Delay)
             # after sending command, WAIT for the acknowledgement before returning
             # MOTOR_Command(MR, _delta_steps, WAIT); // MR = move right with MOTOR ON RIGHT SIDE
-            _response = self.set_motor_MR(self,_delta_steps)
-            if (_response != constants.ACK_RESPONSE_BUF):
+            _response = self.set_motor_MR(_delta_steps)
+            if (_response != constants.ACK_RESPONSE_IMM):
                 print(f"MR FAIL TO ACK. {_response}")
         else:  
             _delta_steps = _delta_steps * -1
@@ -513,7 +513,7 @@ class Motor:
             # after sending command, WAIT for the acknowledgement before returning
             # MOTOR_Command(ML, _delta_steps, WAIT); // ML = move left with MOTOR ON RIGHT SIDE
             _response = self.set_motor_ML(_delta_steps)
-            if (_response != constants.ACK_RESPONSE_BUF):
+            if (_response != constants.ACK_RESPONSE_IMM):
                 print(f"ML FAIL TO ACK. {_response}")
 
         # NOTE: when sending a COMMAND to move the motor, the motor replies with 0% acknowledgement
