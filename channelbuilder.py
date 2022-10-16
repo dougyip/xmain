@@ -59,26 +59,26 @@ class Relay(DelayComponent):
 
     def set_delay(self, val):
         # Check if the top_up Relay section needs to be activated     
-        if val > self._binary_sections_range:
-            self._i2c_address_map[self.top_up[1]] ^= self.top_up[2]
+        if val >= self._binary_sections_range:
+            self._i2c_address_map[self.top_up[1]] |= self.top_up[2]
             print(f"   Relay has top_up of {self.top_up[0]:,} turned on")
             val = val - self.top_up[0]
         elif self.top_up is not None:
             self._i2c_address_map[self.top_up[1]] &= ~(self.top_up[2])
         # Now determine which binary sections need to be activated
-        val /= 1000
+        val /= self._step
         bit_pointer = 0b1
         for list_item in self.sections:
-            print(f"   val = {int(val)} bit pointer = {bit_pointer}")
+            print(f"   val = {int(val)} bit pointer = {bit_pointer} list = {list_item}")
             if int(val) & bit_pointer:
-                self._i2c_address_map[list_item[1]] ^= list_item[2]
+                self._i2c_address_map[list_item[1]] |= list_item[2]
             else:
                 self._i2c_address_map[list_item[1]] &= ~(list_item[2])        
             bit_pointer = bit_pointer << 1
 
         print(f"   New {self._i2c_address_map}")
         
-        print(f"   Relay binary sections are now set to {val:,}")
+        print(f"   Relay binary sections are now set to {int(self._step * val):,}")
 
     def send_results(self, error_code):
         if self.error_code == 0:
@@ -112,7 +112,7 @@ class Channel(DelayComponent):
     def set_delay(self, val):
         self.delay = val
 
-        if val < self.size:
+        if val <= self.size:  #TODO need to subtract step size
             t_val = 0
             # Determine delay value for Trombone if this channel has one
             if self._trombone_index is not None:
@@ -155,7 +155,7 @@ async def main() -> None:
 
     for channel in channels: channel.initialize()
     channels[constants.CH1].set_delay(627000)
-    channels[constants.CH2].set_delay(165000000)
+    channels[constants.CH2].set_delay(199375000)
 
 if __name__ == "__main__":
     asyncio.run(main())
