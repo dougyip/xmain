@@ -136,6 +136,7 @@ class Trombone:
             self.Motor.set_delay_digital(final_delay_pos_digital_steps)
             # now set the current motor position to reflect the actual delay setting
             # TBD
+            time.sleep(5.0)
            
         # move to final position
         if (caltable == True):
@@ -153,143 +154,24 @@ class Trombone:
         print(f"digital step pos = {final_delay_pos_digital_steps}")
 
         self.Motor.set_delay_digital(final_delay_pos_digital_steps)
+
         # now set the current motor position to reflect the actual delay setting
-        # TBD
-                               
-        
-        """
-            if ((((_DelaySetting_FS >= 0) && (_DelaySetting_FS < 625000))) ||
-            ((_DelaySetting_FS == 625000) && (((strcmp(INSTRUMENT.deviceOPTION, "000") == 0) ||
-                                               (strcmp(INSTRUMENT.deviceOPTION, "OEM") == 0) ||
-                                               (INSTRUMENT.stateDEVICE_MODE == DEVICE_PARALLEL)))))
-            {
-            if ((g_NVParameters.nv_overshoot == TRUE) && (MOTOR.CurrentDelaySettingPS < _DelaySetting_PS))
-            {
-                // MOVE TO OVERSHOOT POSITION THEN MOVE TO THE FINAL DESIRED POSITION
 
-                _FinalCP_DelaySetting_PS = _DelaySetting_PS;
-                _DelaySettingPS_With_Overshoot = _DelaySetting_PS + _OvershootAmount;
 
-                if (GLOBAL_SETTINGS.USE_CAL_TABLE == TRUE)
-                {
-                    // 04.30.18 // use a calibrated correction position
-                    // 04.30.18 // determine the index to get the calibration offset
-                    // 04.30.18 // if SIZE_CAL_TABLE == 1251 then calibration offsets are at 0.500 ps steps
-                    // 04.30.18 // if SIZE_CAL_TABLE == 6251 then calibration offsets are at 0.100 ps steps
-
-                    if (SIZE_CAL_TABLE == 1251)
-                    {
-                        // multiply _DelaySetting_PS by 10 (since calibration table fixes are at each 100 fs)
-                        _CalTableDesiredDelayIndex = (int)(_FinalCP_DelaySetting_PS * 2);
-                    }
-                    else
-                    {
-                        _CalTableDesiredDelayIndex = 0;
-                    }
-
-                    // 02.03.21 IF THE INDEX IS ABOVE 1250 THEN USE 0 AS THE OFFSET
-                    if (_CalTableDesiredDelayIndex <= 1250)
-                    {
-                        #// NOTE: THE CALIBRATION TABLE ENTRY OFFSET IS IN FEMTOSECONDS UNITS, E.G. TABLE ENTRY OF -600 SHOULD BE == -0.60 ps
-                        // THEREFORE DIVIDE BY 1000.0 TO GET PS UNITS
-                        _CalTableEntryOffsetAmount = (float)(g_NVParameters.nv_cal_table[_CalTableDesiredDelayIndex] / 1000.0);
-                    }
-                    else
-                    {
-                        _CalTableEntryOffsetAmount = 0;
-                    }
-
-                    // COMPUTE THE NEW DESIRED POSITION IN DIGITAL INT
-                    //_MotorPositionDIGITAL = (unsigned long)((_FinalCP_DelaySetting_PS - _CalTableEntryOffsetAmount) * MOTOR_STEPS_PER_ONE_PS) + MOTOR_STEPS_PER_FIVE_PS;
-                    _TEMP_f = ((_FinalCP_DelaySetting_PS - _CalTableEntryOffsetAmount) * MOTOR_STEPS_PER_ONE_PS) + MOTOR_STEPS_PER_FIVE_PS;
-                    _MotorPositionDIGITAL = (long)_TEMP_f;
-
-                    if (_MotorPositionDIGITAL > MAX_NUMBER_MOTOR_STEPS) // Final Calibrated Position + 8325 STEPS is beyond limit, then adjust amount
-                    {
-                        _MotorPositionDIGITAL = MAX_NUMBER_MOTOR_STEPS;
-                    }
-                    // 07.21.21 IF CALC POSITION IS NEG, MAKE IT ZERO
-                    if (_MotorPositionDIGITAL < 0)
-                        _MotorPositionDIGITAL = 0;
-                    MOTOR_SetDelayDigital(_MotorPositionDIGITAL);
-                    MOTOR.CurrentDelaySettingPS = _DelaySetting_PS + (MOTOR_STEPS_PER_FIVE_PS / MOTOR_STEPS_PER_ONE_PS); // use a min of fix to reflect DESIRED delay setting
-                                                                                                                         // printf("OVERSHOOT _MotorPositionDIGITAL, Fcp, Fcp offset = %lu, %6.2f, %6.2f \n", _MotorPositionDIGITAL, _FinalCP_DelaySetting_PS, _CalTableEntryOffsetAmount);
-                }
-                else
-                {
-                    // MOTOR_SetDelay(_DelaySetting_PS + _OvershootAmount); // add overshoot amount only (CAL TABLE NOT USED)
-                    // COMPUTE THE NEW DESIRED POSITION IN DIGITAL INT
-                    _MotorPositionDIGITAL = (long)(_DelaySettingPS_With_Overshoot * MOTOR_STEPS_PER_ONE_PS);
-                    // 07.21.21 IF CALC POSITION IS NEG, MAKE IT ZERO
-                    if (_MotorPositionDIGITAL < 0)
-                        _MotorPositionDIGITAL = 0;
-                    MOTOR_SetDelayDigital(_MotorPositionDIGITAL);
-
-                    // if using the CAL TABLE, then INSTRUMENT_SETTINGS.CurrentDelay AND MOTOR.CurrentDelaySettingPS
-                    // SHOULD be the _DelaySetting_PS value rather than the ACTUAL included CALIBRATION OFFSET amount
-                    MOTOR.CurrentDelaySettingPS = _DelaySetting_PS;       // fix to reflect DESIRED delay setting
-                    INSTRUMENT_SETTINGS.CURRENT_DELAY = _DelaySetting_PS; // 02.07.08
-                }
-            } // end-if
-
-            // MOVE TO FINAL POSITION (AND CHECK FOR CALIBRATION TABLE ON/OFF)
-            if (GLOBAL_SETTINGS.USE_CAL_TABLE == TRUE)
-            {
-                // 04.30.18 // USE A CALIBRATED CORRECTION POSITION
-                // 04.30.18 // DETERMINE THE INDEX TO GET THE CALIBRATION OFFSET
-                // 04.30.18 // if SIZE_CAL_TABLE == 1251 then calibration offsets are at 0.500 ps steps
-                // 04.30.18 // if SIZE_CAL_TABLE == 6251 then calibration offsets are at 0.100 ps steps
-                if (SIZE_CAL_TABLE == 1251)
-                {
-                    _CalTableDesiredDelayIndex = (int)(_DelaySetting_PS * 2);
-                }
-                else
-                {
-                    _CalTableDesiredDelayIndex = 0;
-                }
-
-                _CalTableEntryOffsetAmount = (float)(g_NVParameters.nv_cal_table[_CalTableDesiredDelayIndex] / 1000.0);
-
-                // MOTOR_SetDelay(_DelaySetting_PS - _CalTableEntryOffsetAmount );  // should be MINUS the Offset Amount (not PLUS) 02.03.18
-                INSTRUMENT.stateMOTOR_MOVE_CHECK_OPC = TRUE; // SIGNAL THAT THIS IS THE LAST MOVEMENT
-                // COMPUTE THE NEW DESIRED POSITION IN DIGITAL INT
-                _MotorPositionDIGITAL = (long)((_DelaySetting_PS - _CalTableEntryOffsetAmount) * MOTOR_STEPS_PER_ONE_PS);
-                // 07.21.21 IF CALC POSITION IS NEG, MAKE IT ZERO
-                if (_MotorPositionDIGITAL < 0)
-                    _MotorPositionDIGITAL = 0;
-                MOTOR_SetDelayDigital(_MotorPositionDIGITAL);
-                // printf("FINAL _MotorPositionDIGITAL, Fcp, offset  = %lu , %6.2f, %6.2f \n", _MotorPositionDIGITAL, _DelaySetting_PS, _CalTableEntryOffsetAmount);
-
-                // if using the CAL TABLE, then INSTRUMENT_SETTINGS.CurrentDelay AND MOTOR.CurrentDelaySettingPS
-                // SHOULD be the _DelaySetting_PS value rather than the ACTUAL included CALIBRATION OFFSET amount
-                MOTOR.CurrentDelaySettingPS = _DelaySetting_PS;       // fix to reflect DESIRED delay setting
-                INSTRUMENT_SETTINGS.CURRENT_DELAY = _DelaySetting_PS; // 02.07.08
-            }
-            else
-            {
-                // MOTOR_SetDelay(_DelaySetting_PS);
-                INSTRUMENT.stateMOTOR_MOVE_CHECK_OPC = TRUE; // SIGNAL THAT THIS IS THE LAST MOVEMENT
-                // COMPUTE THE NEW DESIRED POSITION IN DIGITAL INT
-                _MotorPositionDIGITAL = (long)(_DelaySetting_PS * MOTOR_STEPS_PER_ONE_PS);
-                // 07.21.21 IF CALC POSITION IS NEG, MAKE IT ZERO
-                if (_MotorPositionDIGITAL < 0)
-                    _MotorPositionDIGITAL = 0;
-                MOTOR_SetDelayDigital(_MotorPositionDIGITAL);
-
-                // if using the CAL TABLE, then INSTRUMENT_SETTINGS.CurrentDelay AND MOTOR.CurrentDelaySettingPS
-                // SHOULD be the _DelaySetting_PS value rather than the ACTUAL included CALIBRATION OFFSET amount
-                MOTOR.CurrentDelaySettingPS = _DelaySetting_PS;       // fix to reflect DESIRED delay setting
-                INSTRUMENT_SETTINGS.CURRENT_DELAY = _DelaySetting_PS; // 02.07.08
-            }
-        """    
         return True
    
     def test_input_command(self):
         getinput = input()
-        motorcommand = getinput
-        t.Motor.send_cmd(t.Motor.com_port,motorcommand,0.100)
-        result = t.Motor.read_response(t.Motor.com_port)
-        print (motorcommand, result)
+        if ('DEL' in getinput):
+            # DEL and value
+            value = int(getinput[4:]) * 1000
+            self.set_delay(value,True,True,None)
+            pass
+        else:
+            motorcommand = getinput
+            t.Motor.send_cmd(t.Motor.com_port,motorcommand,0.100)
+            result = t.Motor.read_response(t.Motor.com_port)
+            print (motorcommand, result)
     
 
 if __name__ == "__main__":
@@ -308,7 +190,7 @@ if __name__ == "__main__":
 
     while True:
         t.test_input_command()
-        t.test_input_command()
-        t.Motor.initialize()
+#        t.test_input_command()
+#        t.Motor.initialize()
     
 
