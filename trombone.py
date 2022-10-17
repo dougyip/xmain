@@ -186,6 +186,8 @@ if __name__ == "__main__":
     #t.write_cal_table()
     t.read_cal_table()
     
+    inputvalue = input()
+    
     t.set_delay(600000,True,True,None)
 
     while True:
