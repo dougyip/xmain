@@ -119,6 +119,10 @@ class Motor:
         _result = self.get_command("DI") # GET DI
         return int(_result,base=10)  # RETURNS INT VALUE
 
+    def get_motor_IV(self) -> int:
+        _result = self.get_command("IV") # GET DI
+        return int(_result,base=10)  # RETURNS INT VALUE
+
     # these MOTOR commands return an 0% ACKNOWLEDGEMENT
     def set_motor_AR(self) -> str:
         _response = self.set_command("AR") # SET ALARM RESET
@@ -534,7 +538,7 @@ class Motor:
         # could be 0% or XX=VALUE
         self.send_cmd(self.com_port,motor_command,0.100)
         response = self.read_response(self.com_port)
-        print (f"Sent: {motor_command} Response: {response}")
+        # print (f"Sent: {motor_command} Response: {response}")
         return response # return a str should be constants.ACK_RESPONSE_IMM "0%\r" ACK_RESPONSE_BUF "0*\r"
 
     def get_command(self, motor_command:str) -> str:
@@ -543,7 +547,7 @@ class Motor:
         # could be 0% or XX=VALUE
         self.send_cmd(self.com_port,motor_command,0.100)
         response = self.read_response(self.com_port)
-        print (f"Sent: {motor_command} Response: {response}")
+        # print (f"Sent: {motor_command} Response: {response}")
         # process the response and return just the digits in the response
         digits = self._process_response(response)
         return digits 

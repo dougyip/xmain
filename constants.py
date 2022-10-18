@@ -7,11 +7,12 @@ CH1 = 0
 CH2 = 1
 
 # SystemController CLASS
-ERR_NO_ERROR = -1
+ERR_NO_ERROR = 0
 ERR_INVALID_ARG = 1
 ERR_NO_CALIBRATION = 2
 ERR_DELAY_NOT_SET = 3
 ERR_DELAY_OUT_OF_RANGE = 4
+
 
 # used in Trombone and Motor
 COM_PORT_5 = "/dev/ttyAMA0"
