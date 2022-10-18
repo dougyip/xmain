@@ -1,5 +1,6 @@
 
 import enum
+from pickle import TRUE
 from motor import *
 from dataclasses import dataclass
 import constants
@@ -131,12 +132,13 @@ class Trombone:
             elif (final_delay_pos_digital_steps < 0):
                 final_delay_pos_digital_steps = 0
             
-            print(f"digital step pos = {final_delay_pos_digital_steps}")
+            print(f"final digital step pos with ovs = {final_delay_pos_digital_steps}")
             
             self.Motor.set_delay_digital(final_delay_pos_digital_steps)
             # now set the current motor position to reflect the actual delay setting
             # TBD
-            time.sleep(5.0)
+            # WHEN SENINDG MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
+            # time.sleep(1.5)
            
         # move to final position
         if (caltable == True):
@@ -151,12 +153,21 @@ class Trombone:
         elif (final_delay_pos_digital_steps < 0):
             final_delay_pos_digital_steps = 0
 
-        print(f"digital step pos = {final_delay_pos_digital_steps}")
+        print(f"final digital step pos = {final_delay_pos_digital_steps}")
+        # WHEN SENINDG MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
 
         self.Motor.set_delay_digital(final_delay_pos_digital_steps)
 
         # now set the current motor position to reflect the actual delay setting
-
+        # TEST FOR iv == 0
+        
+        stopped_moving = False
+        while (stopped_moving == False):
+            pos = self.Motor.get_motor_IP()
+            vel = self.Motor.get_motor_IV()
+            print(f"IV = {str(vel)} IP = {str(pos)}")
+            if (vel == 0):
+                stopped_moving = True   # OPC is true when motor has stopped
 
         return True
    
@@ -190,6 +201,10 @@ if __name__ == "__main__":
     
     t.set_delay(600000,True,True,None)
 
+    foo = 0
+    if (foo == False):
+        pass
+    
     while True:
         t.test_input_command()
 #        t.test_input_command()
