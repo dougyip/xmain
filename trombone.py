@@ -1,6 +1,5 @@
 
 import enum
-from pickle import TRUE
 from motor import *
 from dataclasses import dataclass
 import constants
@@ -116,19 +115,20 @@ class Trombone:
         _final_delay_setting = value
         _caltable_index = int((_final_delay_setting * 2)/1000)  # index into the caltable to get the offset amount
         _caltable_offset = self.CalibrationTable[_caltable_index]
+        _caltable_ovs_offset = self.CalibrationTable[_caltable_index + 10] # _caltable_index + 10SHOULD NEVER BE ABOVE 1251 SINCE MAX DELAY == 625.0 PS
         
         # NOTE: THE CALIBRATION TABLE ENTRY OFFSET IS IN FEMTOSECONDS UNITS, E.G. TABLE ENTRY OF -600 SHOULD BE == -0.60 ps
              
         if (overshoot == True):
             if (caltable == True):
                 # move to overshoot position with caltable
-                final_delay_pos_digital_steps = int((((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + constants.MOTOR_STEPS_PER_FIVE_PS)
+                final_delay_pos_digital_steps = int((((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + (constants.MOTOR_STEPS_PER_FIVE_PS - _caltable_ovs_offset))
             else:
                 # move to the overshoot position without caltable
                 final_delay_pos_digital_steps = int(((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + constants.MOTOR_STEPS_PER_FIVE_PS)
 
-            if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
-                final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+            if (final_delay_pos_digital_steps > constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5):
+                final_delay_pos_digital_steps = constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5
             elif (final_delay_pos_digital_steps < 0):
                 final_delay_pos_digital_steps = 0
             
@@ -148,8 +148,8 @@ class Trombone:
             # move to final position without caltable
             final_delay_pos_digital_steps = int((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
 
-        if (final_delay_pos_digital_steps > constants.MAX_NUMBER_MOTOR_STEPS):
-            final_delay_pos_digital_steps = constants.MAX_NUMBER_MOTOR_STEPS
+        if (final_delay_pos_digital_steps > constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5):
+            final_delay_pos_digital_steps = constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5
         elif (final_delay_pos_digital_steps < 0):
             final_delay_pos_digital_steps = 0
 
@@ -166,6 +166,7 @@ class Trombone:
             pos = self.Motor.get_motor_IP()
             vel = self.Motor.get_motor_IV()
             print(f"IV = {str(vel)} IP = {str(pos)}")
+            # SEND CURRENT POSITION BACK TO DELAY CONTROLLER SO CAN MONITOR
             if (vel == 0):
                 stopped_moving = True   # OPC is true when motor has stopped
 
@@ -175,7 +176,8 @@ class Trombone:
         getinput = input()
         if ('DEL' in getinput):
             # DEL and value
-            value = int(getinput[4:]) * 1000
+            # value = int(getinput[4:]) * 1000
+            value = int(float(getinput[4:]) * 1000)
             self.set_delay(value,True,True,None)
             pass
         else:
