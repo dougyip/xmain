@@ -6,6 +6,7 @@ import factory
 import constants
 import dummy_t
 import pigpio
+from system_settings import get_status, set_status
 
 # Relay config.json indices (static constants) for code readibility
 IDX_SIZE = 0
@@ -13,7 +14,7 @@ IDX_ADDR = 1
 IDX_BITS = 2
 
 class DelayComponent(metaclass=ABCMeta):
-
+    
     @abstractmethod
     def initialize(self):
         pass
@@ -78,7 +79,7 @@ class Relay(DelayComponent):
             #except:
             #    print("Can't initialize i2c handles to Relay Modules")
             
-        print(self._i2c_handles)
+        print(f"   Relay handles {self._i2c_handles}")
 
 
     def set_delay(self, val):
@@ -104,12 +105,12 @@ class Relay(DelayComponent):
         print(f"   Generated 12c map {self._relay_modules}")
         print(f"   Binary relay sections are set to {int(self._step * val):,}")
 
-        """ pi = pigpio.pi()
-        OUTPUT_PORT = 0x01
-        for idx, module in enumerate(self._relay_modules):
-            pi.i2c_write_byte_data(self._i2c_handles[idx],  OUTPUT_PORT, module[IDX_BITS])
-            # TODO Post update to delay progress value
-            asyncio.time.sleep(0.20) """
+        # pi = pigpio.pi()
+        # OUTPUT_PORT = 0x01
+        # for idx, module in enumerate(self._relay_modules):
+        #     pi.i2c_write_byte_data(self._i2c_handles[idx],  OUTPUT_PORT, module[IDX_BITS])
+        #     # TODO Post update to delay progress value
+        #     asyncio.time.sleep(0.20)
 
 
     def send_results(self, error_code):
@@ -123,6 +124,7 @@ class Relay(DelayComponent):
 class Channel(DelayComponent):
     channel_number: int
     max_delay: int
+    resolution: int
     components: list
 
     def initialize(self):
@@ -142,10 +144,11 @@ class Channel(DelayComponent):
             self.components[self._trombone_index].initialize()
 
     def set_delay(self, val):
-        self.delay = val
-        #val = round()  #TODO Round the delay value down to the closest step size
 
         if val <= self.max_delay:
+            val = self.resolution * round(val / self.resolution) # Round delay val down to nearest multiple of channel resolution
+            self.delay = val
+
             # Determine delay value for Trombone if this channel has one
             if self._trombone_index is not None:
                 # If the delay is the full range of the instrument then set trombone to its max
@@ -166,7 +169,7 @@ class Channel(DelayComponent):
 
             #TODO Need "success" responses from all the channel component set_delay() methods before updating the self.delay with val.
 
-
+            set_status("current_delay", self.delay, self.channel_number-1)
             print(f"Channel {self.channel_number} delay is now {self.delay:,}")
 
         else: 
@@ -189,11 +192,17 @@ async def main() -> None:
             components = [factory.create(item) for item in channel.components]
             channel.components = components
 
-    for channel in channels: channel.initialize()
+    initial_delay = []
+    for channel in channels: 
+        channel.initialize()
+        initial_delay.append(0)
 
-    channels[constants.CH1].set_delay(199375000)
-    channels[constants.CH2].set_delay(2500000)
+    set_status("current_delay", initial_delay, None)
 
+    channels[constants.CH1].set_delay(198370020)
+    channels[constants.CH2].set_delay(2499400)
+
+    print(get_status("current_delay"))
 
 if __name__ == "__main__":
     asyncio.run(main())
