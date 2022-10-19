@@ -1,9 +1,23 @@
 {
-    "channels": [
+    "channels": [        
         {
             "type": "channel",
             "channel_number": 1,
-            "size": 2500000,
+            "max_delay": 199375000,
+            "resolution": 625000,
+            "components": [
+                {
+                    "type": "relay",
+                    "sections": [[625000, "ADDR_0", 1], [1250000, "ADDR_0", 2], [2500000, "ADDR_1", 1], [5000000, "ADDR_1", 2], [10000000, "ADDR_2", 1], [20000000, "ADDR_2", 2],  [40000000, "ADDR_3", 1],  [80000000, "ADDR_4", 3]],
+                    "top_up": [40000000, "ADDR_3", 2]
+                }   
+            ]         
+        },
+        {
+            "type": "channel",
+            "channel_number": 2,
+            "max_delay": 2500000,
+            "resolution": 500,
             "components": [
                 {
                     "type": "trombone",
@@ -12,22 +26,11 @@
                 },
                 {
                     "type": "relay",
-                    "sections": [[625000, 0, 0], [1250000, 0, 1]],
+                    "sections": [[625000, "ADDR_0", 1], [1250000, "ADDR_0", 2]],
                     "top_up": null
                 }
             ]
-        },
-        {
-            "type": "channel",
-            "channel_number": 2,
-            "size": 100000000,
-            "components": [
-                {
-                    "type": "relay",
-                    "sections": [[625000, 0, 0], [1250000, 0, 1], [2500000, 1 , 0], [5000000, 1, 1], [10000000, 2, 0], [20000000, 2, 1],  [40000000, 3, 1],  [80000000, 3, 3]],
-                    "top_up": [40000000, 4, 0]
-                }   
-            ]         
         }
+
     ]
 }
