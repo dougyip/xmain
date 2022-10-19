@@ -102,16 +102,14 @@ class Trombone:
     def set_delay(self, value : int, overshoot: bool, caltable: bool, callback: object  ) -> int:
         # THIS METHOD IS CALLED FROM THE DELAY OR SYSTEM CONTROLLER
         # value RANGE IS ALREADY CHECKED AND IS 0 >= value <= 625000 in units of fs
-        print(f"set delay called with {value}") 
+        print(f"set_delay called with {value} {overshoot} {caltable} {callback}") 
         
-        # if overshoot is true move to overshoot position then move to final desired position
-
         _final_delay_setting = value
         _caltable_index = int((_final_delay_setting * 2)/1000)  # index into the caltable to get the offset amount
         _caltable_offset = self.CalibrationTable[_caltable_index]
         
         # NOTE: THE CALIBRATION TABLE ENTRY OFFSET IS IN FEMTOSECONDS UNITS, E.G. TABLE ENTRY OF -600 SHOULD BE == -0.60 ps
-
+        # THERE ARE 1251 POINTS INDEXED [0...1250] AND EACH INDEX IS  (DELAY VALUE * 2) AND ENTRY CONTAINS THE AMOUNT TO COMPENSATE TO MEET THE 0.50 STEP RESOLUTION  
         # MOVE TO FINAL POSITION ONLY
         if (caltable == True):
             # move to final position with caltable
@@ -130,7 +128,7 @@ class Trombone:
             elif (final_delay_pos_digital_steps < 0):
                 final_delay_pos_digital_steps = 0
             
-            print(f"Moving to overshoot digital step pos = {final_delay_pos_digital_steps}")
+            print(f"Moving to OVERSHOOT digital step pos = {final_delay_pos_digital_steps}")
             self.Motor.set_delay_digital(final_delay_pos_digital_steps)
            
             # now set the current motor position to reflect the actual delay setting
@@ -146,13 +144,12 @@ class Trombone:
         elif (final_delay_pos_digital_steps < 0):
             final_delay_pos_digital_steps = 0
 
-        print(f"Moving to final digital step pos = {final_delay_pos_digital_steps}")
+        print(f"Moving to FINAL digital step pos = {final_delay_pos_digital_steps}")
+        
         # WHEN SENDING MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
-
         self.Motor.set_delay_digital(final_delay_pos_digital_steps)
 
-        # now set the current motor position to reflect the actual delay setting
-        # TEST FOR IV == 0
+        # TEST FOR IV == 0 AND IP MOTOR POSITION
         stopped_moving = False
         while (stopped_moving == False):
             self.current_digital_pos = pos = self.Motor.get_motor_IP()
