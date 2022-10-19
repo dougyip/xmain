@@ -30,7 +30,7 @@ class Trombone:
         #self.com2.flushOutput()
 
         self.Motor = Motor(self.com_port)
-        if (self.Motor.initialize() == False):
+        if (self.Motor.initialize() != constants.ERR_NO_ERROR):
             # WHAT TO DO IF THERE IS A MOTOR INITIALIZATION PROBLEM HERE?
             print("MOTOR INITIALIZATION FAIL.")
             return False
@@ -38,10 +38,11 @@ class Trombone:
             # NORMAL
             pass
 
+        self.current_digital_pos = 0
 
         # READ THE CALIBRATION TABLE FILE
         self.CalibrationTable = []
-        # read the calibration table file for 5121 entries for Trombone
+        # read the calibration table file for constants.TROMBONE_NUM_CAL_TABLE_ENTRIES entries for Trombone
         if (self.read_cal_table == False):
             return False
         
@@ -70,7 +71,7 @@ class Trombone:
             self.write_default_new_cal_table()
             self.read_cal_table()
             print(f"Cal Table # of items {len(self.CalibrationTable)}")
-            if (len(self.CalibrationTable) == 5121):
+            if (len(self.CalibrationTable) == constants.TROMBONE_NUM_CAL_TABLE_ENTRIES):
                 return True
             else:
                 return False    # PROBLEM WITH CREATING CAL TABLE FILE
@@ -81,7 +82,7 @@ class Trombone:
         filename = 'ctstore' + self.com_port_name[-1] + ".txt"
         try:
             with open(filename,'w') as file:
-                for index in range(0,5121):
+                for index in range(0,constants.TROMBONE_NUM_CAL_TABLE_ENTRIES):
                     file.write("0\r")
                 file.close    
         except FileNotFoundError:
@@ -94,7 +95,7 @@ class Trombone:
         # filename of cal_table is based on the last char of the com_port_name to indicate different and unique trombones
         filename = 'ctstore' + self.com_port_name[-1] + ".txt"
         with open(filename,'w') as file:
-            for index in range(0,5121):
+            for index in range(0,constants.TROMBONE_NUM_CAL_TABLE_ENTRIES):
                 file.write(str(self.CalibrationTable[index]) + '\r')
             file.close
         return constants.ERR_NO_ERROR
@@ -103,9 +104,9 @@ class Trombone:
         # determine if ser or parallel mode
         # set the delay in the trombone only portion
         print (f"Set delay Trombone XT-100 {value}")
-        return constants.ERR_NO_ERROR
+        return constants.ERR_NO_ERROR   # not used
 
-    def set_delay(self, value : int, overshoot: bool, caltable: bool, callback: object  ) -> str:
+    def set_delay(self, value : int, overshoot: bool, caltable: bool, callback: object  ) -> int:
         # THIS METHOD IS CALLED FROM THE DELAY OR SYSTEM CONTROLLER
         # value RANGE IS ALREADY CHECKED AND IS 0 >= value <= 625000 in units of fs
         print(f"set delay called with {value}") 
@@ -115,62 +116,72 @@ class Trombone:
         _final_delay_setting = value
         _caltable_index = int((_final_delay_setting * 2)/1000)  # index into the caltable to get the offset amount
         _caltable_offset = self.CalibrationTable[_caltable_index]
-        _caltable_ovs_offset = self.CalibrationTable[_caltable_index + 10] # _caltable_index + 10SHOULD NEVER BE ABOVE 1251 SINCE MAX DELAY == 625.0 PS
         
         # NOTE: THE CALIBRATION TABLE ENTRY OFFSET IS IN FEMTOSECONDS UNITS, E.G. TABLE ENTRY OF -600 SHOULD BE == -0.60 ps
-             
-        if (overshoot == True):
-            if (caltable == True):
-                # move to overshoot position with caltable
-                final_delay_pos_digital_steps = int((((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + (constants.MOTOR_STEPS_PER_FIVE_PS - _caltable_ovs_offset))
-            else:
-                # move to the overshoot position without caltable
-                final_delay_pos_digital_steps = int(((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS) + constants.MOTOR_STEPS_PER_FIVE_PS)
 
+        # MOVE TO FINAL POSITION ONLY
+        if (caltable == True):
+            # move to final position with caltable
+            final_delay_pos_digital_steps = int(float((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
+        else:
+            # move to final position without caltable
+            final_delay_pos_digital_steps = int((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
+             
+        # EVEN IF OVERSHOOT IS SPECIFIED, ONLY DO OVERSHOOT IF THE CURRENT DELAY IS LESS THAN THE NEW DESIRED DELAY
+        if ((overshoot == True) & (self.current_digital_pos < final_delay_pos_digital_steps)):  
+            final_delay_pos_digital_steps += int(constants.MOTOR_STEPS_PER_FIVE_PS)
+            
+            # BOUNDARY CHECK TO ENSURE WITHIN LIMITS
             if (final_delay_pos_digital_steps > constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5):
                 final_delay_pos_digital_steps = constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5
             elif (final_delay_pos_digital_steps < 0):
                 final_delay_pos_digital_steps = 0
             
-            print(f"final digital step pos with ovs = {final_delay_pos_digital_steps}")
-            
+            print(f"Moving to overshoot digital step pos = {final_delay_pos_digital_steps}")
             self.Motor.set_delay_digital(final_delay_pos_digital_steps)
+           
             # now set the current motor position to reflect the actual delay setting
             # TBD
-            # WHEN SENINDG MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
-            # time.sleep(1.5)
-           
-        # move to final position
-        if (caltable == True):
-            # move to final position with caltable
-            final_delay_pos_digital_steps = int(((_final_delay_setting - _caltable_offset)/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
-        else:
-            # move to final position without caltable
-            final_delay_pos_digital_steps = int((_final_delay_setting/1000) * constants.MOTOR_STEPS_PER_ONE_PS)
+            # WHEN SENDING MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
+            # NOW THAT OVERSHOOT POSITION HAS BEEN ACHIEVED, REMOVE THE OVERSHOOT AMOUNT FROM THE FINAL DELAY VALUE POSITION
+            final_delay_pos_digital_steps -= int(constants.MOTOR_STEPS_PER_FIVE_PS)
+            
 
+        # BOUNDARY CHECK TO ENSURE WITHIN LIMITS
         if (final_delay_pos_digital_steps > constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5):
             final_delay_pos_digital_steps = constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5
         elif (final_delay_pos_digital_steps < 0):
             final_delay_pos_digital_steps = 0
 
-        print(f"final digital step pos = {final_delay_pos_digital_steps}")
-        # WHEN SENINDG MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
+        print(f"Moving to final digital step pos = {final_delay_pos_digital_steps}")
+        # WHEN SENDING MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
 
         self.Motor.set_delay_digital(final_delay_pos_digital_steps)
 
         # now set the current motor position to reflect the actual delay setting
-        # TEST FOR iv == 0
-        
+        # TEST FOR IV == 0
         stopped_moving = False
         while (stopped_moving == False):
-            pos = self.Motor.get_motor_IP()
+            self.current_digital_pos = pos = self.Motor.get_motor_IP()
             vel = self.Motor.get_motor_IV()
             print(f"IV = {str(vel)} IP = {str(pos)}")
+            
             # SEND CURRENT POSITION BACK TO DELAY CONTROLLER SO CAN MONITOR
+            # TBD
+            
             if (vel == 0):
                 stopped_moving = True   # OPC is true when motor has stopped
+                # SIGNAL THE CALLBACK TO INDICATE MOTOR HAS STOPPED MOVING AND OPC IS COMPLETE
+                # TBD
 
-        return True
+        # ALL DONE UPDATE FINAL POSITION
+        self.current_digital_pos = pos
+        if (pos != final_delay_pos_digital_steps):
+            print (f"Motor Position Delta {str(final_delay_pos_digital_steps - pos)} IS NOT ZERO")
+            return constants.ERR_MOTOR_POS_DELTA_NOT_ZERO
+        else:
+            print (f"Final position correct. Delta is ZERO")
+            return constants.ERR_NO_ERROR
    
     def test_input_command(self):
         getinput = input()
@@ -199,6 +210,7 @@ if __name__ == "__main__":
     #t.write_cal_table()
     t.read_cal_table()
     
+    print("Press Enter to set DEL 600")
     inputvalue = input()
     
     t.set_delay(600000,True,True,None)
