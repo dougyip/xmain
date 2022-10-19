@@ -4,6 +4,7 @@
             "type": "channel",
             "channel_number": 1,
             "max_delay": 199375000,
+            "resolution": 625000,
             "components": [
                 {
                     "type": "relay",
@@ -16,6 +17,7 @@
             "type": "channel",
             "channel_number": 2,
             "max_delay": 2500000,
+            "resolution": 500,
             "components": [
                 {
                     "type": "trombone",
