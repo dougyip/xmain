@@ -197,6 +197,7 @@ if __name__ == "__main__":
     print ("Main program ")
     
     t = Trombone(constants.COM_PORT_5)
+
     t.read_cal_table()
     
     print("Press Enter to set DEL 600")
@@ -205,12 +206,10 @@ if __name__ == "__main__":
     t.set_delay(600000,True,True,None)
 
     foo = 0
-    if (foo == False):
+    if (foo == False):  # integer type cannot be compared to a boolean type (this will fail)
         pass
     
     while True:
         t.test_input_command()
-#        t.test_input_command()
-#        t.Motor.initialize()
     
 
