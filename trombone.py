@@ -87,7 +87,6 @@ class Trombone:
                 file.close    
         except FileNotFoundError:
             # The file was not found so create it
-            
             pass            
 
     def write_cal_table(self) -> bool:
@@ -99,12 +98,6 @@ class Trombone:
                 file.write(str(self.CalibrationTable[index]) + '\r')
             file.close
         return constants.ERR_NO_ERROR
-
-    def set_Delay(self, value:int):
-        # determine if ser or parallel mode
-        # set the delay in the trombone only portion
-        print (f"Set delay Trombone XT-100 {value}")
-        return constants.ERR_NO_ERROR   # not used
 
     def set_delay(self, value : int, overshoot: bool, caltable: bool, callback: object  ) -> int:
         # THIS METHOD IS CALLED FROM THE DELAY OR SYSTEM CONTROLLER
@@ -143,10 +136,10 @@ class Trombone:
             # now set the current motor position to reflect the actual delay setting
             # TBD
             # WHEN SENDING MOVE COMMAND WHILE MOTOR IS MOVING, IT WILL BE BUFFERED AND THE RESPONSE WILL INCLUDE * INSTEAD OF %
-            # NOW THAT OVERSHOOT POSITION HAS BEEN ACHIEVED, REMOVE THE OVERSHOOT AMOUNT FROM THE FINAL DELAY VALUE POSITION
+            # NOW THAT OVERSHOOT POSITION HAS BEEN ACHIEVED, REMOVE THE OVERSHOOT AMOUNT FROM THE FINAL DELAY VALUE POSITION AND CONTINUE
             final_delay_pos_digital_steps -= int(constants.MOTOR_STEPS_PER_FIVE_PS)
             
-
+        # SET THE FINAL DESIRED DELAY - OVERSHOOT IF NEEDED HAS ALREADY BEEN DONE
         # BOUNDARY CHECK TO ENSURE WITHIN LIMITS
         if (final_delay_pos_digital_steps > constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5):
             final_delay_pos_digital_steps = constants.MOTOR_MAX_NUMBER_MOTOR_STEPS_TO_632PT5
@@ -204,10 +197,6 @@ if __name__ == "__main__":
     print ("Main program ")
     
     t = Trombone(constants.COM_PORT_5)
-
-    # t.initialize()    # TTY/AMA0
-
-    #t.write_cal_table()
     t.read_cal_table()
     
     print("Press Enter to set DEL 600")
