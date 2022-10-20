@@ -70,12 +70,11 @@ class Relay(DelayComponent):
         self._i2c_handles = []
         # Build list of i2c handles corresponding to the relay modules symbolic addresses
         for relay_module in self._relay_modules:
+            self._i2c_handles.append(dummy_t.relay_module_addresses[relay_module]) # Fake it for now
             #try:
                 # handle = pi.i2c_open(BUS, dummy_t.relay_module_addresses[relay_module])
                 # pi.i2c_write_byte_data(handle, dummy_t.CONFIG, 0)
                 # self._i2c_handles.append(handle)
-                
-            self._i2c_handles.append(dummy_t.relay_module_addresses[relay_module])
             #except:
             #    print("Can't initialize i2c handles to Relay Modules")
             
@@ -131,6 +130,7 @@ class Channel(DelayComponent):
         print(f"Initializiing Channel {self.channel_number}")
         self._relay_index: int = None
         self._trombone_index: int = None
+        self._is_busy: bool = True
 
         if any(obj.__str__ == 'RELAY' for obj in self.components):
             print(f"Channel {self.channel_number} has a Relay")
@@ -143,7 +143,10 @@ class Channel(DelayComponent):
             print (f"Index of Trombone is {self._trombone_index}")
             self.components[self._trombone_index].initialize()
 
+        self._is_busy = False
+
     def set_delay(self, val):
+        self._is_busy = True
 
         if val <= self.max_delay:
             val = self.resolution * round(val / self.resolution) # Round delay val down to nearest multiple of channel resolution
@@ -171,10 +174,14 @@ class Channel(DelayComponent):
 
             set_status("current_delay", self.delay, self.channel_number-1)
             print(f"Channel {self.channel_number} delay is now {self.delay:,}")
+            self._is_busy = False
 
         else: 
             print("Desired delay value exceeds range of channel")
             #return ERROR_CODE
+
+    def is_busy() -> bool:
+        return self._is_busy
 
 async def main() -> None:
     
@@ -186,10 +193,10 @@ async def main() -> None:
         data = json.load(file)
 
         # create the channels
-        channels = [factory.create(item) for item in data["channels"]]
+        channels = [factory.create(channel) for channel in data["channels"]]
         # create the channel components
         for channel in channels:
-            components = [factory.create(item) for item in channel.components]
+            components = [factory.create(component) for component in channel.components]
             channel.components = components
 
     initial_delay = []
