@@ -9,7 +9,8 @@ class Commander:
 
 
     def __init__(self) -> bool:
-        self.n = Network()
+        
+        self.n = Network()  # STARTUP THE NETWORK
         self.n.open_socket_and_listen("192.168.8.70",5025, self.handle_socket_data)     # START THE NETWORK SOCKET MONITOR
         
         return
@@ -18,8 +19,12 @@ class Commander:
         return 
 
     def handle_socket_data(self,data:str):
-        # this gets called back from Network and contains the RAW socket data
+        # THIS IS CALLED BACK FROM NETWORK AND CONTAINS THE RAW SOCKET DATA
         print(f"From socket: {data}")
+        
+        # strip data of unneeded chars
+        # trim \r and \n
+        # split into
         self.send_to_socket(data)
         return
     
